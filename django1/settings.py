@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'sistema.apps.SistemaConfig',
     'controle_pontuacao.apps.ControlePontuacaoConfig',
 ]
 
@@ -62,6 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'sistema.context_processors.permissoes_do_usuario',
             ],
         },
     },
@@ -118,5 +120,5 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'inicio_sistema'
 LOGOUT_REDIRECT_URL = 'login'

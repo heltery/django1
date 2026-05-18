@@ -1,0 +1,29 @@
+.aligned .form-row.field-usuarios > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.aligned .form-row.field-usuarios .flex-container {
+    display: contents;
+}
+
+.aligned .form-row.field-usuarios label[for="id_usuarios"] {
+    order: 1;
+    width: auto;
+    min-width: 0;
+    margin: 0 0 6px;
+    padding: 0;
+}
+
+.aligned .form-row.field-usuarios .help,
+.aligned .form-row.field-usuarios div.help {
+    order: 2;
+    margin: 0 0 10px;
+    padding: 0;
+}
+
+.aligned .form-row.field-usuarios .selector {
+    order: 3;
+    margin-left: 0;
+}

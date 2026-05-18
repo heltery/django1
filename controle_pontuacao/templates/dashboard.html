@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Banco de horas{% endblock %}
 
 {% block content %}
 <section class="card">
-    <h1>Dashboard</h1>
+    <h1>Banco de horas</h1>
     <p>Ola, {{ user.username }}.</p>
 
     <p class="score">{{ saldo }} pontos</p>
@@ -68,8 +68,5 @@
         <p>Nenhum ponto utilizado ainda.</p>
     {% endif %}
 
-    {% if user.is_staff %}
-        <p><a href="/admin/">Abrir administrativo</a></p>
-    {% endif %}
 </section>
 {% endblock %}

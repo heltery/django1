@@ -1,4 +1,4 @@
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from .models import saldo_usuario
@@ -23,15 +23,3 @@ def dashboard(request):
         'ultimos_ganhos': ultimos_ganhos,
         'ultimos_usos': ultimos_usos,
     })
-
-
-def pertence_ao_grupo(nome_grupo):
-    return user_passes_test(
-        lambda user: user.is_authenticated and user.groups.filter(name=nome_grupo).exists(),
-        login_url='login',
-    )
-
-
-@pertence_ao_grupo('Administrativo')
-def painel_administrativo(request):
-    return render(request, 'painel_administrativo.html')

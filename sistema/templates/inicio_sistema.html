@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Sistema{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>Inicio do sistema</h1>
+    <p>Ola, {{ user.username }}. Escolha uma aplicacao para continuar.</p>
+
+    <div class="app-grid">
+        <a class="app-card" href="{% url 'dashboard' %}">
+            <span>
+                <strong>Banco de horas</strong>
+                <span>Acompanhe seu saldo e seus ultimos lancamentos.</span>
+            </span>
+            <span>Acessar</span>
+        </a>
+
+        {% if usuario_administrativo %}
+            <a class="app-card" href="{% url 'painel_administrativo' %}">
+                <span>
+                    <strong>Administrativo</strong>
+                    <span>Gerencie cadastros, usuarios e registros do sistema.</span>
+                </span>
+                <span>Acessar</span>
+            </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
