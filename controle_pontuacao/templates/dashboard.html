@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>Dashboard</h1>
+    <p>Ola, {{ user.username }}.</p>
+
+    <p class="score">{{ saldo }} pontos</p>
+
+    <h2>Seus grupos</h2>
+    {% if grupos %}
+        <ul>
+            {% for grupo in grupos %}
+                <li>{{ grupo }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Este usuario ainda nao pertence a nenhum grupo.</p>
+    {% endif %}
+
+    <h2>Ultimos pontos ganhos</h2>
+    {% if ultimos_ganhos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Ocorrencia</th>
+                    <th>Pontos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ganho in ultimos_ganhos %}
+                    <tr>
+                        <td>{{ ganho.data_ocorrencia }}</td>
+                        <td>{{ ganho.tipo.nome }}</td>
+                        <td>+{{ ganho.pontuacao_aplicada }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum ponto ganho ainda.</p>
+    {% endif %}
+
+    <h2>Ultimos pontos utilizados</h2>
+    {% if ultimos_usos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Uso</th>
+                    <th>Pontos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for uso in ultimos_usos %}
+                    <tr>
+                        <td>{{ uso.data_uso }}</td>
+                        <td>{{ uso.descricao }}</td>
+                        <td>-{{ uso.pontos }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum ponto utilizado ainda.</p>
+    {% endif %}
+
+    {% if user.is_staff %}
+        <p><a href="/admin/">Abrir administrativo</a></p>
+    {% endif %}
+</section>
+{% endblock %}

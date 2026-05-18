@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Sistema{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f8;
+            color: #1f2933;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: #ffffff;
+            border-bottom: 1px solid #d9e2ec;
+        }
+
+        main {
+            max-width: 980px;
+            margin: 32px auto;
+            padding: 0 20px;
+        }
+
+        a, button {
+            color: #0b5fff;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #d9e2ec;
+            border-radius: 6px;
+            padding: 24px;
+        }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            font-weight: 700;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            margin-top: 6px;
+            border: 1px solid #bcccdc;
+            border-radius: 4px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 4px;
+            background: #0b5fff;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .error {
+            color: #b42318;
+        }
+
+        .score {
+            display: inline-block;
+            padding: 12px 16px;
+            border-radius: 6px;
+            background: #e0f2fe;
+            color: #0f4c81;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #d9e2ec;
+            text-align: left;
+        }
+
+        th {
+            background: #f0f4f8;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <strong>Sistema</strong>
+        <nav>
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <form action="{% url 'logout' %}" method="post" style="display:inline">
+                    {% csrf_token %}
+                    <button type="submit">Sair</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Entrar</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
