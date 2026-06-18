@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}Tipos de ocorrencia{% endblock %}
+
+{% block content %}
+<style>
+    .admin-page-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .admin-page-header h1 {
+        margin: 0 0 8px;
+    }
+
+    .admin-page-header p {
+        margin: 0;
+        color: #52606d;
+    }
+
+    .admin-list {
+        overflow-x: auto;
+    }
+
+    .admin-row-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .admin-row-actions form {
+        margin: 0;
+    }
+
+    .admin-row-actions button,
+    .admin-edit-button,
+    .admin-back-link {
+        margin: 0;
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .admin-edit-button,
+    .admin-back-link {
+        display: inline-block;
+        border: 0;
+        border-radius: 4px;
+        background: #0b5fff;
+        color: #ffffff;
+        cursor: pointer;
+        list-style: none;
+        text-decoration: none;
+    }
+
+    .admin-danger-button {
+        background: #b42318;
+    }
+
+    .admin-edit-row td {
+        background: #f8fafc;
+    }
+
+    .admin-edit-panel {
+        max-width: 520px;
+        padding: 12px 0;
+    }
+
+    .admin-form {
+        display: grid;
+        gap: 12px;
+    }
+
+    .admin-form p {
+        margin: 0;
+    }
+
+    .admin-form label {
+        margin: 0 0 6px;
+        font-size: 13px;
+    }
+
+    .admin-field-control,
+    .admin-form select,
+    .admin-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid #bcccdc;
+        border-radius: 4px;
+        background: #ffffff;
+    }
+
+    .admin-form textarea {
+        resize: vertical;
+    }
+
+    .admin-form ul.errorlist {
+        margin: 0 0 6px;
+        padding-left: 18px;
+        color: #b42318;
+    }
+
+    .empty-state {
+        color: #627d98;
+        margin: 0;
+    }
+
+    .status-pill {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 3px 8px;
+        background: #e0f2fe;
+        color: #0f4c81;
+        font-size: 12px;
+        font-weight: 700;
+    }
+</style>
+
+<section class="card">
+    <div class="admin-page-header">
+        <div>
+            <h1>Tipos de ocorrencia</h1>
+            <p>Consulte, edite ou exclua os tipos de ocorrencia cadastrados.</p>
+        </div>
+        <a class="admin-back-link" href="{% url 'painel_administrativo' %}">Voltar</a>
+    </div>
+
+    <div class="admin-list">
+        {% if tipos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Descricao</th>
+                        <th>Pontos</th>
+                        <th>Status</th>
+                        <th>Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tipo in tipos %}
+                        <tr>
+                            <td>{{ tipo.nome }}</td>
+                            <td>{{ tipo.descricao|default:"-" }}</td>
+                            <td>+{{ tipo.pontuacao }}</td>
+                            <td>
+                                {% if tipo.ativo %}
+                                    <span class="status-pill">Ativo</span>
+                                {% else %}
+                                    Inativo
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    <a class="admin-edit-button" href="{% url 'listar_tipos_ocorrencia' %}?editar={{ tipo.id }}#editar-tipo-{{ tipo.id }}">Editar</a>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="form_type" value="tipo_delete">
+                                        <input type="hidden" name="tipo_id" value="{{ tipo.id }}">
+                                        <button class="admin-danger-button" type="submit" onclick="return confirm('Excluir este tipo de ocorrencia?')">Excluir</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% if tipo.editando %}
+                            <tr id="editar-tipo-{{ tipo.id }}" class="admin-edit-row">
+                                <td colspan="5">
+                                    <div class="admin-edit-panel">
+                                        <form class="admin-form" method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="tipo_edit">
+                                            <input type="hidden" name="tipo_id" value="{{ tipo.id }}">
+                                            {{ tipo.edit_form.as_p }}
+                                            <button type="submit">Salvar alteracoes</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="empty-state">Nenhum tipo de ocorrencia cadastrado.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

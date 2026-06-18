@@ -1,9 +1,28 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.contrib.auth.models import User
+from django.contrib.auth.admin import GroupAdmin, UserAdmin
+from django.contrib.auth.models import Group, User
 
 from .models import OcorrenciaVinculada, TipoOcorrencia, UsoPontuacao, saldo_usuario
+
+
+class AdministrativoAdminSite(admin.AdminSite):
+    site_header = 'Administrativo BPRONE'
+    site_title = 'Administrativo'
+    index_title = 'Cadastros administrativos'
+    site_url = '/sistema/'
+
+    def has_permission(self, request):
+        user = request.user
+        return (
+            user.is_active
+            and user.is_authenticated
+            and user.is_superuser
+        )
+
+
+administrativo_site = AdministrativoAdminSite(name='administrativo')
 
 
 class UsuariosMultiplosMixin:
@@ -126,3 +145,53 @@ try:
     user_admin.saldo_atual = saldo_atual
 except KeyError:
     pass
+
+
+class UsuarioAdministrativoAdmin(UserAdmin):
+    list_display = tuple(UserAdmin.list_display) + ('saldo_atual',)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(is_superuser=False)
+
+    def get_fieldsets(self, request, obj=None):
+        if request.user.is_superuser:
+            return super().get_fieldsets(request, obj)
+        if obj is None:
+            return self.add_fieldsets
+        return (
+            (None, {'fields': ('username', 'password')}),
+            ('Informacoes pessoais', {'fields': ('first_name', 'last_name', 'email')}),
+            ('Permissoes', {'fields': ('is_active', 'groups')}),
+            ('Datas importantes', {'fields': ('last_login', 'date_joined')}),
+        )
+
+    def has_change_permission(self, request, obj=None):
+        if obj and obj.is_superuser and not request.user.is_superuser:
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.is_superuser and not request.user.is_superuser:
+            return False
+        return super().has_delete_permission(request, obj)
+
+    def save_model(self, request, obj, form, change):
+        if not request.user.is_superuser:
+            obj.is_staff = False
+            obj.is_superuser = False
+        super().save_model(request, obj, form, change)
+
+    def saldo_atual(self, obj):
+        return saldo_usuario(obj)
+
+    saldo_atual.short_description = 'saldo de pontos'
+
+
+administrativo_site.register(User, UsuarioAdministrativoAdmin)
+administrativo_site.register(Group, GroupAdmin)
+administrativo_site.register(TipoOcorrencia, TipoOcorrenciaAdmin)
+administrativo_site.register(OcorrenciaVinculada, OcorrenciaVinculadaAdmin)
+administrativo_site.register(UsoPontuacao, UsoPontuacaoAdmin)

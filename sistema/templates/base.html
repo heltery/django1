@@ -106,6 +106,28 @@
             color: #b42318;
         }
 
+        .messages {
+            display: grid;
+            gap: 8px;
+            margin: 0 0 18px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .messages li {
+            border-radius: 6px;
+            padding: 12px 14px;
+            background: #e0f2fe;
+            color: #0f4c81;
+            border: 1px solid #bae6fd;
+        }
+
+        .messages .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
         .score {
             display: inline-block;
             padding: 12px 16px;
@@ -207,6 +229,13 @@
             </aside>
         {% endif %}
         <main class="{% if user.is_authenticated %}system-main{% endif %}">
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li class="{{ message.tags }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
             {% block content %}{% endblock %}
         </main>
     </div>

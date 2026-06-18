@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Grupos cadastrados{% endblock %}
+
+{% block content %}
+<style>
+    .admin-page-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .admin-page-header h1 {
+        margin: 0 0 8px;
+    }
+
+    .admin-page-header p {
+        margin: 0;
+        color: #52606d;
+    }
+
+    .admin-list {
+        overflow-x: auto;
+    }
+
+    .admin-row-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .admin-row-actions form {
+        margin: 0;
+    }
+
+    .admin-row-actions button,
+    .admin-edit-button,
+    .admin-back-link {
+        margin: 0;
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .admin-edit-button,
+    .admin-back-link {
+        display: inline-block;
+        border: 0;
+        border-radius: 4px;
+        background: #0b5fff;
+        color: #ffffff;
+        cursor: pointer;
+        list-style: none;
+        text-decoration: none;
+    }
+
+    .admin-edit-button::-webkit-details-marker {
+        display: none;
+    }
+
+    .admin-danger-button {
+        background: #b42318;
+    }
+
+    .admin-edit-row td {
+        background: #f8fafc;
+    }
+
+    .admin-edit-panel {
+        max-width: 520px;
+        padding: 12px 0;
+    }
+
+    .admin-form {
+        display: grid;
+        gap: 12px;
+    }
+
+    .admin-form p {
+        margin: 0;
+    }
+
+    .admin-form label {
+        margin: 0 0 6px;
+        font-size: 13px;
+    }
+
+    .admin-field-control,
+    .admin-form select,
+    .admin-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid #bcccdc;
+        border-radius: 4px;
+        background: #ffffff;
+    }
+
+    .admin-form ul.errorlist {
+        margin: 0 0 6px;
+        padding-left: 18px;
+        color: #b42318;
+    }
+
+    .empty-state {
+        color: #627d98;
+        margin: 0;
+    }
+</style>
+
+<section class="card">
+    <div class="admin-page-header">
+        <div>
+            <h1>Grupos cadastrados</h1>
+            <p>Consulte, edite ou exclua os grupos existentes.</p>
+        </div>
+        <a class="admin-back-link" href="{% url 'painel_administrativo' %}">Voltar</a>
+    </div>
+
+    <div class="admin-list">
+        {% if grupos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Grupo</th>
+                        <th>Permissoes</th>
+                        <th>Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grupo in grupos %}
+                        <tr>
+                            <td>{{ grupo.name }}</td>
+                            <td>{{ grupo.permissions.count }}</td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    <a class="admin-edit-button" href="{% url 'listar_grupos' %}?editar={{ grupo.id }}#editar-grupo-{{ grupo.id }}">Editar</a>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="form_type" value="grupo_delete">
+                                        <input type="hidden" name="grupo_id" value="{{ grupo.id }}">
+                                        <button class="admin-danger-button" type="submit" onclick="return confirm('Excluir este grupo?')">Excluir</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% if grupo.editando %}
+                            <tr id="editar-grupo-{{ grupo.id }}" class="admin-edit-row">
+                                <td colspan="3">
+                                    <div class="admin-edit-panel">
+                                        <form class="admin-form" method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="grupo_edit">
+                                            <input type="hidden" name="grupo_id" value="{{ grupo.id }}">
+                                            {{ grupo.edit_form.as_p }}
+                                            <button type="submit">Salvar alteracoes</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="empty-state">Nenhum grupo cadastrado.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

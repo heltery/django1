@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Utilizacoes de pontos{% endblock %}
+
+{% block content %}
+<style>
+    .admin-page-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .admin-page-header h1 {
+        margin: 0 0 8px;
+    }
+
+    .admin-page-header p {
+        margin: 0;
+        color: #52606d;
+    }
+
+    .admin-back-link,
+    .admin-search-form button {
+        display: inline-block;
+        border: 0;
+        border-radius: 4px;
+        background: #0b5fff;
+        color: #ffffff;
+        cursor: pointer;
+        padding: 10px 14px;
+        text-decoration: none;
+    }
+
+    .admin-search-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .admin-search-form input {
+        margin: 0;
+    }
+
+    .admin-list {
+        overflow-x: auto;
+    }
+
+    .empty-state {
+        color: #627d98;
+        margin: 0;
+    }
+</style>
+
+<section class="card">
+    <div class="admin-page-header">
+        <div>
+            <h1>Utilizacoes de pontos</h1>
+            <p>Consulte utilizacoes registradas e filtre por matricula ou nome de guerra.</p>
+        </div>
+        <a class="admin-back-link" href="{% url 'painel_administrativo' %}">Voltar</a>
+    </div>
+
+    <form class="admin-search-form" method="get">
+        <input type="search" name="q" value="{{ busca }}" placeholder="Pesquisar por matricula ou nome de guerra">
+        <button type="submit">Pesquisar</button>
+    </form>
+
+    <div class="admin-list">
+        {% if usos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Matricula</th>
+                        <th>Nome de guerra</th>
+                        <th>Descricao</th>
+                        <th>Pontos</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for uso in usos %}
+                        <tr>
+                            <td>{{ uso.usuario.username }}</td>
+                            <td>{{ uso.usuario.first_name|default:"-" }}</td>
+                            <td>{{ uso.descricao }}</td>
+                            <td>-{{ uso.pontos }}</td>
+                            <td>{{ uso.data_uso|date:"d/m/Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="empty-state">Nenhuma utilizacao encontrada.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

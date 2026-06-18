@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar utilizacao{% endblock %}
+
+{% block content %}
+<style>
+    .admin-page-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .admin-page-header h1 {
+        margin: 0 0 8px;
+    }
+
+    .admin-page-header p {
+        margin: 0;
+        color: #52606d;
+    }
+
+    .admin-back-link,
+    .admin-search-form button {
+        display: inline-block;
+        border: 0;
+        border-radius: 4px;
+        background: #0b5fff;
+        color: #ffffff;
+        cursor: pointer;
+        padding: 10px 14px;
+        text-decoration: none;
+    }
+
+    .admin-search-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .admin-search-form input {
+        margin: 0;
+    }
+
+    .admin-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .admin-form-field {
+        display: grid;
+        gap: 6px;
+    }
+
+    .admin-form label {
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .admin-field-control,
+    .admin-form select,
+    .admin-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid #bcccdc;
+        border-radius: 4px;
+        background: #ffffff;
+    }
+
+    .admin-form ul.errorlist {
+        margin: 0;
+        padding-left: 18px;
+        color: #b42318;
+    }
+
+    .user-choice-list {
+        max-height: 320px;
+        overflow-y: auto;
+        border: 1px solid #bcccdc;
+        border-radius: 6px;
+        background: #ffffff;
+        padding: 10px;
+    }
+
+    .user-choice-list ul {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .user-choice-list label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .user-choice-list input {
+        width: auto;
+        margin: 0;
+    }
+
+    .admin-list {
+        margin-top: 24px;
+        overflow-x: auto;
+    }
+
+    .empty-state {
+        color: #627d98;
+        margin: 0;
+    }
+</style>
+
+<section class="card">
+    <div class="admin-page-header">
+        <div>
+            <h1>Registrar utilizacao de pontos</h1>
+            <p>Pesquise militares por matricula ou nome de guerra e registre a utilizacao.</p>
+        </div>
+        <a class="admin-back-link" href="{% url 'painel_administrativo' %}">Voltar</a>
+    </div>
+
+    <form class="admin-search-form" method="get">
+        <input type="search" name="q" value="{{ busca }}" placeholder="Pesquisar por matricula ou nome de guerra">
+        <button type="submit">Pesquisar</button>
+    </form>
+
+    <form class="admin-form" method="post">
+        {% csrf_token %}
+
+        <div class="admin-form-field">
+            {{ form.usuarios.errors }}
+            <label>{{ form.usuarios.label }}</label>
+            <div class="user-choice-list">
+                {% if usuarios_encontrados %}
+                    {{ form.usuarios }}
+                {% else %}
+                    <p class="empty-state">Nenhum militar encontrado para esta pesquisa.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="admin-form-field">
+            {{ form.descricao.errors }}
+            {{ form.descricao.label_tag }}
+            {{ form.descricao }}
+        </div>
+
+        <div class="admin-form-field">
+            {{ form.pontos.errors }}
+            {{ form.pontos.label_tag }}
+            {{ form.pontos }}
+        </div>
+
+        <div class="admin-form-field">
+            {{ form.data_uso.errors }}
+            {{ form.data_uso.label_tag }}
+            {{ form.data_uso }}
+        </div>
+
+        <button type="submit">Registrar uso</button>
+    </form>
+
+    <div class="admin-list">
+        <h2>Ultimas utilizacoes</h2>
+        {% if usos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Matricula</th>
+                        <th>Nome de guerra</th>
+                        <th>Descricao</th>
+                        <th>Pontos</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for uso in usos %}
+                        <tr>
+                            <td>{{ uso.usuario.username }}</td>
+                            <td>{{ uso.usuario.first_name|default:"-" }}</td>
+                            <td>{{ uso.descricao }}</td>
+                            <td>-{{ uso.pontos }}</td>
+                            <td>{{ uso.data_uso|date:"d/m/Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="empty-state">Nenhuma utilizacao registrada.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

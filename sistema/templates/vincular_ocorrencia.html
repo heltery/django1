@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Vincular ocorrencia{% endblock %}
+
+{% block content %}
+<style>
+    .admin-page-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .admin-page-header h1 {
+        margin: 0 0 8px;
+    }
+
+    .admin-page-header p {
+        margin: 0;
+        color: #52606d;
+    }
+
+    .admin-back-link,
+    .admin-search-form button {
+        display: inline-block;
+        border: 0;
+        border-radius: 4px;
+        background: #0b5fff;
+        color: #ffffff;
+        cursor: pointer;
+        padding: 10px 14px;
+        text-decoration: none;
+    }
+
+    .admin-search-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .admin-search-form input {
+        margin: 0;
+    }
+
+    .admin-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .admin-form-field {
+        display: grid;
+        gap: 6px;
+    }
+
+    .admin-form label {
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .admin-field-control,
+    .admin-form select,
+    .admin-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid #bcccdc;
+        border-radius: 4px;
+        background: #ffffff;
+    }
+
+    .admin-form textarea {
+        resize: vertical;
+    }
+
+    .admin-form .helptext {
+        display: block;
+        margin-top: 4px;
+        color: #627d98;
+        font-size: 12px;
+    }
+
+    .admin-form ul.errorlist {
+        margin: 0;
+        padding-left: 18px;
+        color: #b42318;
+    }
+
+    .user-choice-list {
+        max-height: 320px;
+        overflow-y: auto;
+        border: 1px solid #bcccdc;
+        border-radius: 6px;
+        background: #ffffff;
+        padding: 10px;
+    }
+
+    .user-choice-list ul {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .user-choice-list label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .user-choice-list input {
+        width: auto;
+        margin: 0;
+    }
+
+    .admin-list {
+        margin-top: 24px;
+        overflow-x: auto;
+    }
+
+    .empty-state {
+        color: #627d98;
+        margin: 0;
+    }
+
+    @media (max-width: 720px) {
+        .admin-page-header,
+        .admin-search-form {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-search-form {
+            display: grid;
+        }
+    }
+</style>
+
+<section class="card">
+    <div class="admin-page-header">
+        <div>
+            <h1>Vincular ocorrencia a militares</h1>
+            <p>Pesquise militares por matricula ou nome de guerra e aplique a ocorrencia selecionada.</p>
+        </div>
+        <a class="admin-back-link" href="{% url 'painel_administrativo' %}">Voltar</a>
+    </div>
+
+    <form class="admin-search-form" method="get">
+        <input type="search" name="q" value="{{ busca }}" placeholder="Pesquisar por matricula ou nome de guerra">
+        <button type="submit">Pesquisar</button>
+    </form>
+
+    <form class="admin-form" method="post">
+        {% csrf_token %}
+
+        <div class="admin-form-field">
+            {{ form.usuarios.errors }}
+            <label>{{ form.usuarios.label }}</label>
+            <div class="user-choice-list">
+                {% if usuarios_encontrados %}
+                    {{ form.usuarios }}
+                {% else %}
+                    <p class="empty-state">Nenhum militar encontrado para esta pesquisa.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="admin-form-field">
+            {{ form.tipo.errors }}
+            {{ form.tipo.label_tag }}
+            {{ form.tipo }}
+        </div>
+
+        <div class="admin-form-field">
+            {{ form.pontuacao_aplicada.errors }}
+            {{ form.pontuacao_aplicada.label_tag }}
+            {{ form.pontuacao_aplicada }}
+            {% if form.pontuacao_aplicada.help_text %}
+                <span class="helptext">{{ form.pontuacao_aplicada.help_text }}</span>
+            {% endif %}
+        </div>
+
+        <div class="admin-form-field">
+            {{ form.observacao.errors }}
+            {{ form.observacao.label_tag }}
+            {{ form.observacao }}
+        </div>
+
+        <div class="admin-form-field">
+            {{ form.data_ocorrencia.errors }}
+            {{ form.data_ocorrencia.label_tag }}
+            {{ form.data_ocorrencia }}
+        </div>
+
+        <button type="submit">Vincular ocorrencia</button>
+    </form>
+
+    <div class="admin-list">
+        <h2>Ultimas ocorrencias</h2>
+        {% if ocorrencias %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Matricula</th>
+                        <th>Nome de guerra</th>
+                        <th>Tipo</th>
+                        <th>Pontos</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ocorrencia in ocorrencias %}
+                        <tr>
+                            <td>{{ ocorrencia.usuario.username }}</td>
+                            <td>{{ ocorrencia.usuario.first_name|default:"-" }}</td>
+                            <td>{{ ocorrencia.tipo.nome }}</td>
+                            <td>+{{ ocorrencia.pontuacao_aplicada }}</td>
+                            <td>{{ ocorrencia.data_ocorrencia|date:"d/m/Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="empty-state">Nenhuma ocorrencia vinculada.</p>
+        {% endif %}
+    </div>
+</section>
+
+{{ tipos_pontuacao|json_script:"tipos-pontuacao" }}
+<script>
+    (function () {
+        var tipoSelect = document.getElementById('id_tipo');
+        var pontuacaoInput = document.getElementById('id_pontuacao_aplicada');
+        var pontuacoesNode = document.getElementById('tipos-pontuacao');
+
+        if (!tipoSelect || !pontuacaoInput || !pontuacoesNode) {
+            return;
+        }
+
+        var pontuacoes = JSON.parse(pontuacoesNode.textContent);
+
+        function atualizarPontuacao() {
+            var pontuacao = pontuacoes[tipoSelect.value];
+            pontuacaoInput.value = pontuacao === undefined ? '' : pontuacao;
+        }
+
+        tipoSelect.addEventListener('change', atualizarPontuacao);
+        atualizarPontuacao();
+    })();
+</script>
+{% endblock %}
