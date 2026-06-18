@@ -3,9 +3,10 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
-<section class="card">
-    <h1>Inicio</h1>
-    <p>Bem-vindo ao sistema.</p>
-    <p><a href="{% url 'login' %}">Entrar no sistema</a></p>
+<section class="card mx-auto max-w-3xl">
+    <p class="text-sm font-bold uppercase tracking-[.18em] text-blue-200">Sistema BPRone</p>
+    <h1>Banco de horas e painel administrativo</h1>
+    <p>Bem-vindo ao sistema. Acesse para acompanhar pontuacoes, ocorrencias e utilizacoes.</p>
+    <p class="mt-6"><a class="admin-action-button inline-block !w-auto" href="{% url 'login' %}">Entrar no sistema</a></p>
 </section>
 {% endblock %}

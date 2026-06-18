@@ -4,69 +4,100 @@
 
 {% block content %}
 <section class="card">
-    <h1>Banco de horas</h1>
-    <p>Ola, {{ user.username }}.</p>
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+            <p class="text-sm font-bold uppercase tracking-[.18em] text-blue-200">Banco de horas</p>
+            <br>
+            <h1>Resumo pessoal</h1>
+            <br>
+            <p>Ola, {{ user.first_name }}. Acompanhe seu saldo e seus ultimos lancamentos.</p>
+        </div>
+        <p class="score">{{ saldo }} pontos</p>
+    </div>
 
-    <p class="score">{{ saldo }} pontos</p>
+    <div class="mt-6 grid gap-4 md:grid-cols-3">
+        <div class="rounded-2xl bg-slate-950/40 p-5 ring-1 ring-white/10">
+            <p class="text-sm font-bold text-slate-300">Saldo atual</p>
+            <strong class="mt-2 block text-3xl text-white">{{ saldo }}</strong>
+            <span class="text-sm text-slate-400">pontos disponiveis</span>
+        </div>
+        <div class="rounded-2xl bg-slate-950/40 p-5 ring-1 ring-white/10">
+            <p class="text-sm font-bold text-slate-300">Ganhos recentes</p>
+            <strong class="mt-2 block text-3xl text-white">{{ ultimos_ganhos|length }}</strong>
+            <span class="text-sm text-slate-400">ultimos registros</span>
+        </div>
+        <div class="rounded-2xl bg-slate-950/40 p-5 ring-1 ring-white/10">
+            <p class="text-sm font-bold text-slate-300">Usos recentes</p>
+            <strong class="mt-2 block text-3xl text-white">{{ ultimos_usos|length }}</strong>
+            <span class="text-sm text-slate-400">ultimos abatimentos</span>
+        </div>
+    </div>
 
-    <h2>Seus grupos</h2>
-    {% if grupos %}
-        <ul>
-            {% for grupo in grupos %}
-                <li>{{ grupo }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>Este usuario ainda nao pertence a nenhum grupo.</p>
-    {% endif %}
-
-    <h2>Ultimos pontos ganhos</h2>
-    {% if ultimos_ganhos %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Ocorrencia</th>
-                    <th>Pontos</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for ganho in ultimos_ganhos %}
-                    <tr>
-                        <td>{{ ganho.data_ocorrencia }}</td>
-                        <td>{{ ganho.tipo.nome }}</td>
-                        <td>+{{ ganho.pontuacao_aplicada }}</td>
-                    </tr>
+    <div class="mt-6 rounded-2xl bg-slate-950/30 p-5 ring-1 ring-white/10">
+        <h2 class="!mt-0">Seus grupos</h2>
+        {% if grupos %}
+            <div class="mt-3 flex flex-wrap gap-2">
+                {% for grupo in grupos %}
+                    <span class="status-pill">{{ grupo }}</span>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nenhum ponto ganho ainda.</p>
-    {% endif %}
+            </div>
+        {% else %}
+            <p>Este usuario ainda nao pertence a nenhum grupo.</p>
+        {% endif %}
+    </div>
 
-    <h2>Ultimos pontos utilizados</h2>
-    {% if ultimos_usos %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Uso</th>
-                    <th>Pontos</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for uso in ultimos_usos %}
-                    <tr>
-                        <td>{{ uso.data_uso }}</td>
-                        <td>{{ uso.descricao }}</td>
-                        <td>-{{ uso.pontos }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nenhum ponto utilizado ainda.</p>
-    {% endif %}
+    <div class="mt-6 grid gap-5 xl:grid-cols-2">
+        <div class="rounded-2xl bg-slate-950/30 p-5 ring-1 ring-white/10">
+            <h2 class="!mt-0">Ultimos pontos ganhos</h2>
+            {% if ultimos_ganhos %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Ocorrencia</th>
+                            <th>Pontos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ganho in ultimos_ganhos %}
+                            <tr>
+                                <td>{{ ganho.data_ocorrencia }}</td>
+                                <td>{{ ganho.tipo.nome }}</td>
+                                <td>+{{ ganho.pontuacao_aplicada }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Nenhum ponto ganho ainda.</p>
+            {% endif %}
+        </div>
 
+        <div class="rounded-2xl bg-slate-950/30 p-5 ring-1 ring-white/10">
+            <h2 class="!mt-0">Ultimos pontos utilizados</h2>
+            {% if ultimos_usos %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Uso</th>
+                            <th>Pontos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for uso in ultimos_usos %}
+                            <tr>
+                                <td>{{ uso.data_uso }}</td>
+                                <td>{{ uso.descricao }}</td>
+                                <td>-{{ uso.pontos }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Nenhum ponto utilizado ainda.</p>
+            {% endif %}
+        </div>
+    </div>
 </section>
 {% endblock %}
