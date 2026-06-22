@@ -8,6 +8,9 @@ db.sqlite3
 __pycache__/
 *.pyc
 
+# Arquivos estaticos coletados
+staticfiles/
+
 # Variáveis de ambiente
 .env
 .ENV
