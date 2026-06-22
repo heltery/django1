@@ -4,7 +4,19 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.admin import GroupAdmin, UserAdmin
 from django.contrib.auth.models import Group, User
 
-from .models import OcorrenciaVinculada, TipoOcorrencia, UsoPontuacao, saldo_usuario
+from banco_de_horas.models import OcorrenciaVinculada, TipoOcorrencia, UsoPontuacao, saldo_usuario
+
+
+admin.site.site_header = 'Administracao do Sistema BPRONE'
+admin.site.site_title = 'Sistema'
+admin.site.index_title = 'Painel administrativo'
+
+
+def somente_superuser(request):
+    return request.user.is_active and request.user.is_superuser
+
+
+admin.site.has_permission = somente_superuser
 
 
 class AdministrativoAdminSite(admin.AdminSite):
@@ -86,7 +98,7 @@ class OcorrenciaVinculadaAdmin(admin.ModelAdmin):
     readonly_fields = ('criado_por', 'criado_em')
 
     class Media:
-        css = {'all': ('controle_pontuacao/admin_multiselect.css',)}
+        css = {'all': ('administracao/admin_multiselect.css',)}
 
     def save_model(self, request, obj, form, change):
         if not obj.criado_por_id:
@@ -115,7 +127,7 @@ class UsoPontuacaoAdmin(admin.ModelAdmin):
     readonly_fields = ('registrado_por', 'criado_em')
 
     class Media:
-        css = {'all': ('controle_pontuacao/admin_multiselect.css',)}
+        css = {'all': ('administracao/admin_multiselect.css',)}
 
     def save_model(self, request, obj, form, change):
         if not obj.registrado_por_id:

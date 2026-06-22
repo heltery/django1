@@ -4,14 +4,6 @@ from django.shortcuts import render
 from .models import saldo_usuario
 
 
-def index(request):
-    return render(request, 'index.html')
-
-
-def contato(request):
-    return render(request, 'contato.html')
-
-
 @login_required
 def dashboard(request):
     grupos = request.user.groups.values_list('name', flat=True)

@@ -37,8 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'administracao.apps.AdministracaoConfig',
     'sistema.apps.SistemaConfig',
-    'controle_pontuacao.apps.ControlePontuacaoConfig',
+    'banco_de_horas.apps.BancoDeHorasConfig',
 ]
 
 MIDDLEWARE = [
@@ -56,14 +57,14 @@ ROOT_URLCONF = 'django1.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'sistema.context_processors.permissoes_do_usuario',
+                'administracao.context_processors.permissoes_do_usuario',
             ],
         },
     },

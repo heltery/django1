@@ -3,7 +3,7 @@ from datetime import date
 from django import forms
 from django.contrib.auth.models import Group, Permission, User
 
-from controle_pontuacao.models import OcorrenciaVinculada, TipoOcorrencia, UsoPontuacao
+from banco_de_horas.models import OcorrenciaVinculada, TipoOcorrencia, UsoPontuacao
 
 
 class AdminFormMixin:
