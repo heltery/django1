@@ -140,12 +140,12 @@ WSGI_APPLICATION = 'django1.wsgi.application'
 #----------------------------------
 
 #----- DATA BASE PRA RODAR NO RENDER -----
-if dj_database_url:
+# ----- DATABASE -----
+DATABASE_URL = config('DATABASE_URL', default=None)
+
+if DATABASE_URL:
     DATABASES = {
-        'default': dj_database_url.config(
-            default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-            conn_max_age=600,
-        )
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
 else:
     DATABASES = {
