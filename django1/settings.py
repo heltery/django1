@@ -10,22 +10,60 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+try:
+    from decouple import Csv, config
+except ImportError:
+    def _load_dotenv():
+        env_path = BASE_DIR / '.env'
+        if not env_path.exists():
+            return
+
+        for line in env_path.read_text(encoding='utf-8').splitlines():
+            line = line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            key, value = line.split('=', 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+    def _cast_bool(value):
+        return str(value).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+    class Csv:
+        def __call__(self, value):
+            if not value:
+                return []
+            return [item.strip() for item in value.split(',') if item.strip()]
+
+    def config(name, default=None, cast=None):
+        value = os.environ.get(name, default)
+        if cast is bool:
+            return _cast_bool(value)
+        if cast:
+            return cast(value)
+        return value
+
+    _load_dotenv()
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-efy8skv4n^2ci5b%a^#*7y%+x*u#b6o15b5($nzeqn1dnt@w-y'
+SECRET_KEY = config(
+    'SECRET_KEY',
+    default='django-insecure-efy8skv4n^2ci5b%a^#*7y%+x*u#b6o15b5($nzeqn1dnt@w-y',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
 
 # Application definition
