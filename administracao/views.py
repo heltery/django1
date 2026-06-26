@@ -26,6 +26,33 @@ def usuario_administrativo_required(view_func):
     )(view_func)
 
 
+def ids_usuarios_selecionados(request):
+    origem = request.POST if request.method == 'POST' else request.GET
+    return [
+        usuario_id
+        for usuario_id in origem.getlist('usuarios')
+        if usuario_id.isdigit()
+    ]
+
+
+def usuarios_para_selecao(request):
+    busca = request.GET.get('q', '').strip()
+    selecionados = ids_usuarios_selecionados(request)
+
+    usuarios_queryset = User.objects.filter(is_active=True).order_by('first_name', 'username')
+    if busca:
+        usuarios_queryset = usuarios_queryset.filter(
+            Q(username__icontains=busca) | Q(first_name__icontains=busca)
+        )
+
+    usuarios_selecionados = User.objects.filter(
+        is_active=True,
+        pk__in=selecionados,
+    ).order_by('first_name', 'username')
+
+    return busca, selecionados, usuarios_queryset, usuarios_selecionados, usuarios_queryset.exists()
+
+
 @usuario_administrativo_required
 def painel_administrativo(request):
     forms = {
@@ -237,15 +264,17 @@ def listar_tipos_ocorrencia(request):
 
 @usuario_administrativo_required
 def vincular_ocorrencia(request):
-    busca = request.GET.get('q', '').strip()
-    usuarios_queryset = User.objects.filter(is_active=True).order_by('username')
-    if busca:
-        usuarios_queryset = usuarios_queryset.filter(
-            Q(username__icontains=busca)
-            | Q(first_name__icontains=busca)
-        )
+    busca, usuarios_selecionados, usuarios_queryset, usuarios_selecionados_objetos, usuarios_encontrados = usuarios_para_selecao(request)
+    usuarios = list(usuarios_queryset)
+    usuarios_selecionados_objetos = list(usuarios_selecionados_objetos)
+    usuarios_selecionados_set = set(usuarios_selecionados)
+    for usuario in usuarios:
+        usuario.selecionado = str(usuario.pk) in usuarios_selecionados_set
 
-    form = OcorrenciaVinculadaForm(usuarios_queryset=usuarios_queryset)
+    form = OcorrenciaVinculadaForm(
+        usuarios_queryset=usuarios_queryset,
+        initial={'usuarios': usuarios_selecionados},
+    )
 
     if request.method == 'POST':
         form = OcorrenciaVinculadaForm(request.POST, usuarios_queryset=usuarios_queryset)
@@ -273,8 +302,11 @@ def vincular_ocorrencia(request):
     }
     contexto = {
         'busca': busca,
+        'usuarios_selecionados': usuarios_selecionados,
+        'usuarios_selecionados_objetos': usuarios_selecionados_objetos,
+        'usuarios': usuarios,
         'form': form,
-        'usuarios_encontrados': usuarios_queryset.exists(),
+        'usuarios_encontrados': usuarios_encontrados,
         'tipos_pontuacao': tipos_pontuacao,
         'ocorrencias': OcorrenciaVinculada.objects.select_related('usuario', 'tipo').all()[:8],
     }
@@ -283,15 +315,17 @@ def vincular_ocorrencia(request):
 
 @usuario_administrativo_required
 def registrar_utilizacao_pontos(request):
-    busca = request.GET.get('q', '').strip()
-    usuarios_queryset = User.objects.filter(is_active=True).order_by('username')
-    if busca:
-        usuarios_queryset = usuarios_queryset.filter(
-            Q(username__icontains=busca)
-            | Q(first_name__icontains=busca)
-        )
+    busca, usuarios_selecionados, usuarios_queryset, usuarios_selecionados_objetos, usuarios_encontrados = usuarios_para_selecao(request)
+    usuarios = list(usuarios_queryset)
+    usuarios_selecionados_objetos = list(usuarios_selecionados_objetos)
+    usuarios_selecionados_set = set(usuarios_selecionados)
+    for usuario in usuarios:
+        usuario.selecionado = str(usuario.pk) in usuarios_selecionados_set
 
-    form = UsoPontuacaoForm(usuarios_queryset=usuarios_queryset)
+    form = UsoPontuacaoForm(
+        usuarios_queryset=usuarios_queryset,
+        initial={'usuarios': usuarios_selecionados},
+    )
 
     if request.method == 'POST':
         form = UsoPontuacaoForm(request.POST, usuarios_queryset=usuarios_queryset)
@@ -311,8 +345,11 @@ def registrar_utilizacao_pontos(request):
 
     contexto = {
         'busca': busca,
+        'usuarios_selecionados': usuarios_selecionados,
+        'usuarios_selecionados_objetos': usuarios_selecionados_objetos,
+        'usuarios': usuarios,
         'form': form,
-        'usuarios_encontrados': usuarios_queryset.exists(),
+        'usuarios_encontrados': usuarios_encontrados,
         'usos': UsoPontuacao.objects.select_related('usuario').all()[:8],
     }
     return render(request, 'registrar_utilizacao_pontos.html', contexto)

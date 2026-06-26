@@ -44,6 +44,10 @@
         margin: 0;
     }
 
+    .selected-users-fields {
+        display: none;
+    }
+
     .admin-form {
         display: grid;
         gap: 16px;
@@ -87,16 +91,53 @@
         color: #b42318;
     }
 
-    .user-choice-list {
-        max-height: 320px;
-        overflow-y: auto;
-        border: 1px solid #bcccdc;
-        border-radius: 6px;
-        background: #ffffff;
-        padding: 10px;
+    .user-selection-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.7fr);
+        gap: 14px;
     }
 
-    .user-choice-list ul {
+    .user-selection-panel {
+        border: 1px solid var(--line-soft);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .user-selection-panel-available {
+        background: linear-gradient(160deg, var(--accent), #ffb703);
+    }
+
+    .user-selection-panel-selected {
+        background: linear-gradient(180deg, #171717, #050505);
+    }
+
+    .user-selection-panel h3 {
+        margin: 0;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(5, 5, 5, .18);
+        font-size: 14px;
+    }
+
+    .user-selection-panel-available h3 {
+        color: #050505;
+    }
+
+    .user-selection-panel-selected h3 {
+        border-bottom-color: rgba(255, 242, 0, .22);
+        color: var(--accent);
+    }
+
+    .user-choice-list,
+    .selected-user-list {
+        max-height: 320px;
+        overflow-y: auto;
+        padding: 10px;
+        background: transparent !important;
+        border-color: transparent !important;
+    }
+
+    .user-choice-list ul,
+    .selected-user-list ul {
         display: grid;
         gap: 8px;
         margin: 0;
@@ -104,17 +145,80 @@
         list-style: none;
     }
 
-    .user-choice-list label {
+    .user-choice-button,
+    .selected-user-row {
         display: flex;
-        gap: 8px;
+        justify-content: space-between;
+        gap: 10px;
         align-items: center;
-        margin: 0;
-        font-weight: 400;
+        width: 100%;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 9px 10px;
+        text-align: left;
     }
 
-    .user-choice-list input {
-        width: auto;
+    .user-choice-button {
         margin: 0;
+        background: linear-gradient(180deg, #242424, #111111) !important;
+        color: #fffbe6 !important;
+        cursor: pointer;
+        box-shadow: none;
+    }
+
+    .user-choice-button.is-selected {
+        border-color: var(--accent);
+        background: linear-gradient(180deg, #35310d, #171717) !important;
+    }
+
+    .user-choice-name {
+        display: block;
+        color: inherit;
+        font-weight: 600;
+    }
+
+    .user-choice-matricula {
+        display: block;
+        color: #d6c98c;
+        font-size: 12px;
+    }
+
+    .user-choice-status,
+    .remove-selected-user {
+        flex: 0 0 auto;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .user-choice-status {
+        color: var(--accent);
+    }
+
+    .selected-user-row {
+        background: linear-gradient(160deg, var(--accent), #ffb703) !important;
+        color: #050505 !important;
+        border-color: rgba(255, 242, 0, .55);
+    }
+
+    .selected-user-row .user-choice-name,
+    .selected-user-row .user-choice-matricula {
+        color: #050505;
+    }
+
+    .remove-selected-user {
+        border: 0;
+        border-radius: 999px !important;
+        background: #171717 !important;
+        color: var(--accent) !important;
+        cursor: pointer;
+        margin: 0;
+        padding: 7px 10px;
+        box-shadow: none;
+    }
+
+    .selected-empty-state {
+        margin: 0;
+        color: #627d98;
     }
 
     .admin-list {
@@ -129,7 +233,8 @@
 
     @media (max-width: 720px) {
         .admin-page-header,
-        .admin-search-form {
+        .admin-search-form,
+        .user-selection-grid {
             grid-template-columns: 1fr;
         }
 
@@ -149,22 +254,76 @@
     </div>
 
     <form class="admin-search-form" method="get">
+        <div class="selected-users-fields">
+            {% for usuario_id in usuarios_selecionados %}
+                <input type="hidden" name="usuarios" value="{{ usuario_id }}">
+            {% endfor %}
+        </div>
         <input type="search" name="q" value="{{ busca }}" placeholder="Pesquisar por matricula ou nome de guerra">
         <button type="submit">Pesquisar</button>
     </form>
 
-    <form class="admin-form" method="post">
+    <form class="admin-form user-selection-form" method="post">
         {% csrf_token %}
+        <div class="selected-users-fields"></div>
 
         <div class="admin-form-field">
             {{ form.usuarios.errors }}
             <label>{{ form.usuarios.label }}</label>
-            <div class="user-choice-list">
-                {% if usuarios_encontrados %}
-                    {{ form.usuarios }}
-                {% else %}
-                    <p class="empty-state">Nenhum militar encontrado para esta pesquisa.</p>
-                {% endif %}
+            <div class="user-selection-grid">
+                <div class="user-selection-panel user-selection-panel-available">
+                    <h3>Militares</h3>
+                    <div class="user-choice-list">
+                        {% if usuarios_encontrados %}
+                            <ul>
+                                {% for usuario in usuarios %}
+                                    <li>
+                                        <button
+                                            class="user-choice-button {% if usuario.selecionado %}is-selected{% endif %}"
+                                            type="button"
+                                            data-user-id="{{ usuario.pk }}"
+                                            data-user-name="{{ usuario.first_name|default:'Sem nome de guerra' }}"
+                                            data-user-matricula="{{ usuario.username }}"
+                                        >
+                                            <span>
+                                                <span class="user-choice-name">{{ usuario.first_name|default:"Sem nome de guerra" }}</span>
+                                                <span class="user-choice-matricula">{{ usuario.username }}</span>
+                                            </span>
+                                            <span class="user-choice-status">{% if usuario.selecionado %}Selecionado{% else %}Adicionar{% endif %}</span>
+                                        </button>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="empty-state">Nenhum militar encontrado para esta pesquisa.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="user-selection-panel user-selection-panel-selected">
+                    <h3>Selecionados</h3>
+                    <div class="selected-user-list">
+                        <ul>
+                            {% for usuario in usuarios_selecionados_objetos %}
+                                <li>
+                                    <div
+                                        class="selected-user-row"
+                                        data-user-id="{{ usuario.pk }}"
+                                        data-user-name="{{ usuario.first_name|default:'Sem nome de guerra' }}"
+                                        data-user-matricula="{{ usuario.username }}"
+                                    >
+                                        <span>
+                                            <span class="user-choice-name">{{ usuario.first_name|default:"Sem nome de guerra" }}</span>
+                                            <span class="user-choice-matricula">{{ usuario.username }}</span>
+                                        </span>
+                                        <button class="remove-selected-user" type="button" data-user-id="{{ usuario.pk }}">Remover</button>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <p class="selected-empty-state">Nenhum militar selecionado.</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -249,6 +408,109 @@
 
         tipoSelect.addEventListener('change', atualizarPontuacao);
         atualizarPontuacao();
+    })();
+</script>
+<script>
+    (function () {
+        var selecionados = new Map();
+        var searchForm = document.querySelector('.admin-search-form');
+        var selectionForm = document.querySelector('.user-selection-form');
+        var userButtons = document.querySelectorAll('.user-choice-button');
+        var hiddenContainers = document.querySelectorAll('.selected-users-fields');
+        var selectedList = document.querySelector('.selected-user-list ul');
+        var emptyState = document.querySelector('.selected-empty-state');
+
+        document.querySelectorAll('.selected-user-row').forEach(function (row) {
+            selecionados.set(row.dataset.userId, {
+                id: row.dataset.userId,
+                name: row.dataset.userName,
+                matricula: row.dataset.userMatricula
+            });
+        });
+
+        function syncButtons() {
+            userButtons.forEach(function (button) {
+                var selected = selecionados.has(button.dataset.userId);
+                button.classList.toggle('is-selected', selected);
+                button.querySelector('.user-choice-status').textContent = selected ? 'Selecionado' : 'Adicionar';
+            });
+        }
+
+        function renderSelectedList() {
+            selectedList.innerHTML = '';
+            Array.from(selecionados.values()).sort(function (a, b) {
+                return a.name.localeCompare(b.name) || a.matricula.localeCompare(b.matricula);
+            }).forEach(function (usuario) {
+                var item = document.createElement('li');
+                item.innerHTML = '<div class="selected-user-row" data-user-id="' + usuario.id + '">' +
+                    '<span><span class="user-choice-name"></span><span class="user-choice-matricula"></span></span>' +
+                    '<button class="remove-selected-user" type="button" data-user-id="' + usuario.id + '">Remover</button>' +
+                    '</div>';
+                item.querySelector('.user-choice-name').textContent = usuario.name;
+                item.querySelector('.user-choice-matricula').textContent = usuario.matricula;
+                selectedList.appendChild(item);
+            });
+            emptyState.style.display = selecionados.size ? 'none' : 'block';
+        }
+
+        function renderHiddenFields() {
+            hiddenContainers.forEach(function (container) {
+                container.innerHTML = '';
+                selecionados.forEach(function (usuario) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'usuarios';
+                    input.value = usuario.id;
+                    container.appendChild(input);
+                });
+            });
+        }
+
+        userButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                var usuario = {
+                    id: button.dataset.userId,
+                    name: button.dataset.userName,
+                    matricula: button.dataset.userMatricula
+                };
+                if (selecionados.has(usuario.id)) {
+                    selecionados.delete(usuario.id);
+                } else {
+                    selecionados.set(usuario.id, usuario);
+                }
+                syncButtons();
+                renderSelectedList();
+                renderHiddenFields();
+            });
+        });
+
+        if (selectedList) {
+            selectedList.addEventListener('click', function (event) {
+                if (!event.target.classList.contains('remove-selected-user')) {
+                    return;
+                }
+                selecionados.delete(event.target.dataset.userId);
+                syncButtons();
+                renderSelectedList();
+                renderHiddenFields();
+            });
+        }
+
+        if (searchForm) {
+            searchForm.addEventListener('submit', function () {
+                renderHiddenFields();
+            });
+        }
+
+        if (selectionForm) {
+            selectionForm.addEventListener('submit', function () {
+                renderHiddenFields();
+            });
+        }
+
+        syncButtons();
+        renderSelectedList();
+        renderHiddenFields();
     })();
 </script>
 {% endblock %}
