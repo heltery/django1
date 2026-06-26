@@ -271,11 +271,11 @@
                                             class="user-choice-button {% if usuario.selecionado %}is-selected{% endif %}"
                                             type="button"
                                             data-user-id="{{ usuario.pk }}"
-                                            data-user-name="{{ usuario.first_name|default:'Sem nome de guerra' }}"
+                                            data-user-name="{{ usuario.identificacao_militar }}"
                                             data-user-matricula="{{ usuario.username }}"
                                         >
                                             <span>
-                                                <span class="user-choice-name">{{ usuario.first_name|default:"Sem nome de guerra" }}</span>
+                                                <span class="user-choice-name">{{ usuario.identificacao_militar }}</span>
                                                 <span class="user-choice-matricula">{{ usuario.username }}</span>
                                             </span>
                                             <span class="user-choice-status">{% if usuario.selecionado %}Selecionado{% else %}Adicionar{% endif %}</span>
@@ -298,11 +298,11 @@
                                     <div
                                         class="selected-user-row"
                                         data-user-id="{{ usuario.pk }}"
-                                        data-user-name="{{ usuario.first_name|default:'Sem nome de guerra' }}"
+                                        data-user-name="{{ usuario.identificacao_militar }}"
                                         data-user-matricula="{{ usuario.username }}"
                                     >
                                         <span>
-                                            <span class="user-choice-name">{{ usuario.first_name|default:"Sem nome de guerra" }}</span>
+                                            <span class="user-choice-name">{{ usuario.identificacao_militar }}</span>
                                             <span class="user-choice-matricula">{{ usuario.username }}</span>
                                         </span>
                                         <button class="remove-selected-user" type="button" data-user-id="{{ usuario.pk }}">Remover</button>

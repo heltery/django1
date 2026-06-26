@@ -2,8 +2,11 @@ from datetime import date
 
 from django import forms
 from django.contrib.auth.models import Group, Permission, User
+from django.core.exceptions import ObjectDoesNotExist
 
 from banco_de_horas.models import OcorrenciaVinculada, TipoOcorrencia, UsoPontuacao
+
+from .models import POSTOS_GRADUACOES, PerfilUsuario
 
 
 class AdminFormMixin:
@@ -66,6 +69,11 @@ class GrupoEditForm(GrupoForm):
 
 class UsuarioForm(AdminFormMixin, forms.Form):
     username = forms.CharField(label='Usuario (matricula)', max_length=150)
+    posto_graduacao = forms.ChoiceField(
+        label='Posto/Graduação',
+        choices=[('', 'Selecione')] + POSTOS_GRADUACOES,
+        required=False,
+    )
     first_name = forms.CharField(label='Nome de guerra', max_length=150)
     whatsapp = forms.CharField(label='Telefone WhatsApp', max_length=150, required=False)
     email = forms.EmailField(label='E-mail', required=False)
@@ -94,6 +102,10 @@ class UsuarioForm(AdminFormMixin, forms.Form):
         usuario.is_superuser = False
         if commit:
             usuario.save()
+            PerfilUsuario.objects.update_or_create(
+                usuario=usuario,
+                defaults={'posto_graduacao': self.cleaned_data['posto_graduacao']},
+            )
             if self.cleaned_data['group']:
                 usuario.groups.add(self.cleaned_data['group'])
         return usuario
@@ -101,6 +113,11 @@ class UsuarioForm(AdminFormMixin, forms.Form):
 
 class UsuarioEditForm(AdminFormMixin, forms.Form):
     username = forms.CharField(label='Usuario (matricula)', max_length=150)
+    posto_graduacao = forms.ChoiceField(
+        label='Posto/Graduação',
+        choices=[('', 'Selecione')] + POSTOS_GRADUACOES,
+        required=False,
+    )
     first_name = forms.CharField(label='Nome de guerra', max_length=150)
     whatsapp = forms.CharField(label='Telefone WhatsApp', max_length=150, required=False)
     email = forms.EmailField(label='E-mail', required=False)
@@ -119,8 +136,13 @@ class UsuarioEditForm(AdminFormMixin, forms.Form):
     def __init__(self, *args, instance=None, **kwargs):
         self.instance = instance
         if instance and 'initial' not in kwargs:
+            try:
+                perfil = instance.perfil_administrativo
+            except ObjectDoesNotExist:
+                perfil = None
             kwargs['initial'] = {
                 'username': instance.username,
+                'posto_graduacao': perfil.posto_graduacao if perfil else '',
                 'first_name': instance.first_name,
                 'whatsapp': instance.last_name,
                 'email': instance.email,
@@ -140,12 +162,17 @@ class UsuarioEditForm(AdminFormMixin, forms.Form):
     def save(self):
         usuario = self.instance
         usuario.username = self.cleaned_data['username']
+        posto_graduacao = self.cleaned_data['posto_graduacao']
         usuario.first_name = self.cleaned_data['first_name']
         usuario.last_name = self.cleaned_data['whatsapp']
         usuario.email = self.cleaned_data['email']
         if self.cleaned_data['password']:
             usuario.set_password(self.cleaned_data['password'])
         usuario.save()
+        PerfilUsuario.objects.update_or_create(
+            usuario=usuario,
+            defaults={'posto_graduacao': posto_graduacao},
+        )
         usuario.groups.clear()
         if self.cleaned_data['group']:
             usuario.groups.add(self.cleaned_data['group'])
@@ -161,8 +188,14 @@ class TipoOcorrenciaForm(AdminFormMixin, forms.ModelForm):
 
 class UsuarioMatriculaNomeChoiceField(forms.ModelMultipleChoiceField):
     def label_from_instance(self, obj):
+        try:
+            perfil = obj.perfil_administrativo
+        except ObjectDoesNotExist:
+            perfil = None
+        posto_graduacao = perfil.posto_graduacao if perfil and perfil.posto_graduacao else ''
         nome_guerra = obj.first_name or 'Sem nome de guerra'
-        return f'{obj.username} - {nome_guerra}'
+        identificacao = f'{posto_graduacao} {nome_guerra}'.strip()
+        return f'{obj.username} - {identificacao}'
 
 
 class OcorrenciaVinculadaForm(AdminFormMixin, forms.Form):

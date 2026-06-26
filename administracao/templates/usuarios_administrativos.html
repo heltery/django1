@@ -25,6 +25,53 @@
         overflow-x: auto;
     }
 
+    .admin-search-form {
+        display: grid;
+        grid-template-columns: 180px minmax(220px, 1fr) auto;
+        gap: 10px;
+        max-width: 650px;
+        margin-left: auto;
+        margin-bottom: 18px;
+    }
+
+    .admin-search-form input,
+    .admin-search-form select {
+        margin: 0;
+    }
+
+    .admin-pagination {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
+    .admin-pagination-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .admin-pagination a,
+    .admin-pagination span {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 7px 10px;
+        border: 1px solid rgba(255, 242, 0, .25);
+        color: #fff7ad;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .admin-pagination .current-page {
+        background: rgba(255, 242, 0, .14);
+        color: var(--accent);
+    }
+
     .admin-row-actions {
         display: flex;
         gap: 8px;
@@ -125,6 +172,17 @@
         font-size: 12px;
         font-weight: 700;
     }
+
+    @media (max-width: 720px) {
+        .admin-page-header,
+        .admin-search-form {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-search-form {
+            display: grid;
+        }
+    }
 </style>
 
 <section class="card">
@@ -136,12 +194,23 @@
         <a class="admin-back-link" href="{% url 'painel_administrativo' %}">Voltar</a>
     </div>
 
+    <form class="admin-search-form" method="get">
+        <select name="filtro" aria-label="Campo do filtro">
+            {% for valor, rotulo in filtros_usuarios.items %}
+                <option value="{{ valor }}" {% if filtro == valor %}selected{% endif %}>{{ rotulo }}</option>
+            {% endfor %}
+        </select>
+        <input type="search" name="q" value="{{ busca }}" placeholder="Pesquisar">
+        <button type="submit">Filtrar</button>
+    </form>
+
     <div class="admin-list">
         {% if usuarios %}
             <table>
                 <thead>
                     <tr>
                         <th>Matricula</th>
+                        <th>Posto/Graduacao</th>
                         <th>Nome de guerra</th>
                         <th>WhatsApp</th>
                         <th>E-mail</th>
@@ -154,6 +223,7 @@
                     {% for usuario in usuarios %}
                         <tr>
                             <td>{{ usuario.username }}</td>
+                            <td>{{ usuario.perfil_administrativo.posto_graduacao|default:"-" }}</td>
                             <td>{{ usuario.first_name }}</td>
                             <td>{{ usuario.last_name|default:"-" }}</td>
                             <td>{{ usuario.email|default:"-" }}</td>
@@ -167,7 +237,7 @@
                             <td>{{ usuario.saldo_atual }} pts</td>
                             <td>
                                 <div class="admin-row-actions">
-                                    <a class="admin-edit-button" href="{% url 'listar_usuarios' %}?editar={{ usuario.id }}#editar-usuario-{{ usuario.id }}">Editar</a>
+                                    <a class="admin-edit-button" href="{% url 'listar_usuarios' %}?editar={{ usuario.id }}&page={{ pagina.number }}&filtro={{ filtro }}{% if busca %}&q={{ busca|urlencode }}{% endif %}#editar-usuario-{{ usuario.id }}">Editar</a>
                                     <form method="post">
                                         {% csrf_token %}
                                         <input type="hidden" name="form_type" value="usuario_delete">
@@ -179,7 +249,7 @@
                         </tr>
                         {% if usuario.editando %}
                             <tr id="editar-usuario-{{ usuario.id }}" class="admin-edit-row">
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="admin-edit-panel">
                                         <form class="admin-form" method="post">
                                             {% csrf_token %}
@@ -199,5 +269,24 @@
             <p class="empty-state">Nenhum usuario cadastrado.</p>
         {% endif %}
     </div>
+
+    {% if pagina.paginator.num_pages > 1 %}
+        <nav class="admin-pagination" aria-label="Paginacao de usuarios">
+            <span>Pagina {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+            <div class="admin-pagination-actions">
+                {% if pagina.has_previous %}
+                    <a href="?page=1&filtro={{ filtro }}{% if busca %}&q={{ busca|urlencode }}{% endif %}">Primeira</a>
+                    <a href="?page={{ pagina.previous_page_number }}&filtro={{ filtro }}{% if busca %}&q={{ busca|urlencode }}{% endif %}">Anterior</a>
+                {% endif %}
+
+                <span class="current-page">{{ pagina.number }}</span>
+
+                {% if pagina.has_next %}
+                    <a href="?page={{ pagina.next_page_number }}&filtro={{ filtro }}{% if busca %}&q={{ busca|urlencode }}{% endif %}">Proxima</a>
+                    <a href="?page={{ pagina.paginator.num_pages }}&filtro={{ filtro }}{% if busca %}&q={{ busca|urlencode }}{% endif %}">Ultima</a>
+                {% endif %}
+            </div>
+        </nav>
+    {% endif %}
 </section>
 {% endblock %}

@@ -1,11 +1,14 @@
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.contrib.auth.models import Group, User
+from django.core.paginator import Paginator
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import ProtectedError
 from django.db.models import Q
+from django.db.models import Sum
 from django.shortcuts import redirect, render
 
-from banco_de_horas.models import OcorrenciaVinculada, TipoOcorrencia, UsoPontuacao, saldo_usuario
+from banco_de_horas.models import OcorrenciaVinculada, TipoOcorrencia, UsoPontuacao
 
 from .forms import (
     GrupoEditForm,
@@ -17,6 +20,22 @@ from .forms import (
     UsuarioForm,
 )
 from .permissoes import usuario_tem_acesso_administrativo
+
+
+def identificacao_militar(usuario):
+    try:
+        perfil = usuario.perfil_administrativo
+    except ObjectDoesNotExist:
+        perfil = None
+    posto_graduacao = perfil.posto_graduacao if perfil and perfil.posto_graduacao else ''
+    nome_guerra = usuario.first_name or 'Sem nome de guerra'
+    return f'{posto_graduacao} {nome_guerra}'.strip()
+
+
+def aplicar_identificacao_militar(usuarios):
+    for usuario in usuarios:
+        usuario.identificacao_militar = identificacao_militar(usuario)
+    return usuarios
 
 
 def usuario_administrativo_required(view_func):
@@ -39,13 +58,17 @@ def usuarios_para_selecao(request):
     busca = request.GET.get('q', '').strip()
     selecionados = ids_usuarios_selecionados(request)
 
-    usuarios_queryset = User.objects.filter(is_active=True).order_by('first_name', 'username')
+    usuarios_queryset = User.objects.select_related('perfil_administrativo').filter(
+        is_active=True,
+    ).order_by('first_name', 'username')
     if busca:
         usuarios_queryset = usuarios_queryset.filter(
-            Q(username__icontains=busca) | Q(first_name__icontains=busca)
+            Q(username__icontains=busca)
+            | Q(first_name__icontains=busca)
+            | Q(perfil_administrativo__posto_graduacao__icontains=busca)
         )
 
-    usuarios_selecionados = User.objects.filter(
+    usuarios_selecionados = User.objects.select_related('perfil_administrativo').filter(
         is_active=True,
         pk__in=selecionados,
     ).order_by('first_name', 'username')
@@ -171,6 +194,17 @@ def listar_grupos(request):
 def listar_usuarios(request):
     usuario_edit_form_com_erro = None
     usuario_em_edicao = request.GET.get('editar')
+    busca = request.GET.get('q', '').strip()
+    filtro = request.GET.get('filtro', 'todos')
+    filtros_usuarios = {
+        'todos': 'Todos',
+        'matricula': 'Matricula',
+        'posto': 'Posto/Graduacao',
+        'nome': 'Nome de guerra',
+        'grupo': 'Grupo',
+    }
+    if filtro not in filtros_usuarios:
+        filtro = 'todos'
 
     if request.method == 'POST':
         form_type = request.POST.get('form_type')
@@ -200,9 +234,50 @@ def listar_usuarios(request):
                 messages.error(request, 'Usuario nao encontrado.')
             return redirect('listar_usuarios')
 
-    usuarios = list(User.objects.prefetch_related('groups').order_by('username'))
+    usuarios_queryset = User.objects.select_related('perfil_administrativo').prefetch_related('groups').order_by(
+        'first_name',
+        'username',
+    )
+    if busca:
+        filtros_query = {
+            'todos': (
+                Q(username__icontains=busca)
+                | Q(first_name__icontains=busca)
+                | Q(email__icontains=busca)
+                | Q(last_name__icontains=busca)
+                | Q(groups__name__icontains=busca)
+                | Q(perfil_administrativo__posto_graduacao__icontains=busca)
+            ),
+            'matricula': Q(username__icontains=busca),
+            'posto': Q(perfil_administrativo__posto_graduacao__icontains=busca),
+            'nome': Q(first_name__icontains=busca),
+            'whatsapp': Q(last_name__icontains=busca),
+            'email': Q(email__icontains=busca),
+            'grupo': Q(groups__name__icontains=busca),
+        }
+        usuarios_queryset = usuarios_queryset.filter(filtros_query[filtro]).distinct()
+
+    paginator = Paginator(usuarios_queryset, 25)
+    pagina = paginator.get_page(request.GET.get('page'))
+    usuarios = list(pagina.object_list)
+    usuarios_ids = [usuario.pk for usuario in usuarios]
+
+    ganhos_por_usuario = {
+        item['usuario_id']: item['total'] or 0
+        for item in OcorrenciaVinculada.objects.filter(usuario_id__in=usuarios_ids)
+        .values('usuario_id')
+        .annotate(total=Sum('pontuacao_aplicada'))
+    }
+    usos_por_usuario = {
+        item['usuario_id']: item['total'] or 0
+        for item in UsoPontuacao.objects.filter(usuario_id__in=usuarios_ids)
+        .values('usuario_id')
+        .annotate(total=Sum('pontos'))
+    }
+
     for usuario in usuarios:
-        #usuario.saldo_atual = saldo_usuario(usuario)
+        usuario.identificacao_militar = identificacao_militar(usuario)
+        usuario.saldo_atual = ganhos_por_usuario.get(usuario.pk, 0) - usos_por_usuario.get(usuario.pk, 0)
         if usuario_edit_form_com_erro and usuario_edit_form_com_erro[0] == usuario.pk:
             usuario.edit_form = usuario_edit_form_com_erro[1]
             usuario.editando = True
@@ -210,7 +285,17 @@ def listar_usuarios(request):
             usuario.edit_form = UsuarioEditForm(prefix=f'usuario_edit_{usuario.pk}', instance=usuario)
             usuario.editando = str(usuario.pk) == usuario_em_edicao
 
-    return render(request, 'usuarios_administrativos.html', {'usuarios': usuarios})
+    return render(
+        request,
+        'usuarios_administrativos.html',
+        {
+            'busca': busca,
+            'filtro': filtro,
+            'filtros_usuarios': filtros_usuarios,
+            'pagina': pagina,
+            'usuarios': usuarios,
+        },
+    )
 
 
 @usuario_administrativo_required
@@ -265,8 +350,8 @@ def listar_tipos_ocorrencia(request):
 @usuario_administrativo_required
 def vincular_ocorrencia(request):
     busca, usuarios_selecionados, usuarios_queryset, usuarios_selecionados_objetos, usuarios_encontrados = usuarios_para_selecao(request)
-    usuarios = list(usuarios_queryset)
-    usuarios_selecionados_objetos = list(usuarios_selecionados_objetos)
+    usuarios = aplicar_identificacao_militar(list(usuarios_queryset))
+    usuarios_selecionados_objetos = aplicar_identificacao_militar(list(usuarios_selecionados_objetos))
     usuarios_selecionados_set = set(usuarios_selecionados)
     for usuario in usuarios:
         usuario.selecionado = str(usuario.pk) in usuarios_selecionados_set
@@ -316,8 +401,8 @@ def vincular_ocorrencia(request):
 @usuario_administrativo_required
 def registrar_utilizacao_pontos(request):
     busca, usuarios_selecionados, usuarios_queryset, usuarios_selecionados_objetos, usuarios_encontrados = usuarios_para_selecao(request)
-    usuarios = list(usuarios_queryset)
-    usuarios_selecionados_objetos = list(usuarios_selecionados_objetos)
+    usuarios = aplicar_identificacao_militar(list(usuarios_queryset))
+    usuarios_selecionados_objetos = aplicar_identificacao_militar(list(usuarios_selecionados_objetos))
     usuarios_selecionados_set = set(usuarios_selecionados)
     for usuario in usuarios:
         usuario.selecionado = str(usuario.pk) in usuarios_selecionados_set
