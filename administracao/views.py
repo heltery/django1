@@ -175,7 +175,7 @@ def listar_usuarios(request):
 
     usuarios = list(User.objects.prefetch_related('groups').order_by('username'))
     for usuario in usuarios:
-        usuario.saldo_atual = saldo_usuario(usuario)
+        #usuario.saldo_atual = saldo_usuario(usuario)
         if usuario_edit_form_com_erro and usuario_edit_form_com_erro[0] == usuario.pk:
             usuario.edit_form = usuario_edit_form_com_erro[1]
             usuario.editando = True
