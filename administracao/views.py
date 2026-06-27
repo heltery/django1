@@ -7,6 +7,7 @@ from django.db.models import ProtectedError
 from django.db.models import Q
 from django.db.models import Sum
 from django.shortcuts import redirect, render
+from django.utils.dateparse import parse_date
 
 from banco_de_horas.models import OcorrenciaVinculada, TipoOcorrencia, UsoPontuacao
 
@@ -82,8 +83,6 @@ def painel_administrativo(request):
         'grupo': GrupoForm(prefix='grupo'),
         'usuario': UsuarioForm(prefix='usuario'),
         'tipo': TipoOcorrenciaForm(prefix='tipo'),
-        'ocorrencia': OcorrenciaVinculadaForm(prefix='ocorrencia'),
-        'uso': UsoPontuacaoForm(prefix='uso'),
     }
 
     if request.method == 'POST':
@@ -92,8 +91,6 @@ def painel_administrativo(request):
             'grupo': GrupoForm,
             'usuario': UsuarioForm,
             'tipo': TipoOcorrenciaForm,
-            'ocorrencia': OcorrenciaVinculadaForm,
-            'uso': UsoPontuacaoForm,
         }.get(form_type)
 
         if form_class:
@@ -110,30 +107,6 @@ def painel_administrativo(request):
                 elif form_type == 'tipo':
                     form.save()
                     messages.success(request, 'Tipo de ocorrencia criado com sucesso.')
-                elif form_type == 'ocorrencia':
-                    usuarios = form.cleaned_data['usuarios']
-                    tipo = form.cleaned_data['tipo']
-                    pontuacao = form.cleaned_data['pontuacao_aplicada']
-                    for usuario in usuarios:
-                        OcorrenciaVinculada.objects.create(
-                            usuario=usuario,
-                            tipo=tipo,
-                            pontuacao_aplicada=pontuacao,
-                            observacao=form.cleaned_data['observacao'],
-                            data_ocorrencia=form.cleaned_data['data_ocorrencia'],
-                            criado_por=request.user,
-                        )
-                    messages.success(request, 'Ocorrencia vinculada aos usuarios selecionados.')
-                elif form_type == 'uso':
-                    for usuario in form.cleaned_data['usuarios']:
-                        UsoPontuacao.objects.create(
-                            usuario=usuario,
-                            descricao=form.cleaned_data['descricao'],
-                            pontos=form.cleaned_data['pontos'],
-                            data_uso=form.cleaned_data['data_uso'],
-                            registrado_por=request.user,
-                        )
-                    messages.success(request, 'Uso de pontos registrado para os usuarios selecionados.')
                 return redirect('painel_administrativo')
 
             messages.error(request, 'Revise os campos destacados antes de salvar.')
@@ -141,8 +114,6 @@ def painel_administrativo(request):
     contexto = {
         'forms': forms,
         'tipos': TipoOcorrencia.objects.order_by('nome')[:8],
-        'ocorrencias': OcorrenciaVinculada.objects.select_related('usuario', 'tipo').all()[:8],
-        'usos': UsoPontuacao.objects.select_related('usuario').all()[:8],
     }
     return render(request, 'painel_administrativo.html', contexto)
 
@@ -393,7 +364,6 @@ def vincular_ocorrencia(request):
         'form': form,
         'usuarios_encontrados': usuarios_encontrados,
         'tipos_pontuacao': tipos_pontuacao,
-        'ocorrencias': OcorrenciaVinculada.objects.select_related('usuario', 'tipo').all()[:8],
     }
     return render(request, 'vincular_ocorrencia.html', contexto)
 
@@ -435,23 +405,68 @@ def registrar_utilizacao_pontos(request):
         'usuarios': usuarios,
         'form': form,
         'usuarios_encontrados': usuarios_encontrados,
-        'usos': UsoPontuacao.objects.select_related('usuario').all()[:8],
     }
     return render(request, 'registrar_utilizacao_pontos.html', contexto)
 
 
 @usuario_administrativo_required
-def listar_utilizacoes_pontos(request):
-    busca = request.GET.get('q', '').strip()
-    usos = UsoPontuacao.objects.select_related('usuario').order_by('-data_uso', '-criado_em')
-    if busca:
-        usos = usos.filter(
-            Q(usuario__username__icontains=busca)
-            | Q(usuario__first_name__icontains=busca)
-        )
+def listar_ocorrencias_vinculadas(request):
+    filtros = {
+        'matricula': request.GET.get('matricula', '').strip(),
+        'nome': request.GET.get('nome', '').strip(),
+        'tipo': request.GET.get('tipo', '').strip(),
+        'data': request.GET.get('data', '').strip(),
+    }
+    ocorrencias = OcorrenciaVinculada.objects.select_related('usuario', 'tipo').order_by(
+        '-data_ocorrencia',
+        '-criado_em',
+    )
+    if filtros['matricula']:
+        ocorrencias = ocorrencias.filter(usuario__username__icontains=filtros['matricula'])
+    if filtros['nome']:
+        ocorrencias = ocorrencias.filter(usuario__first_name__icontains=filtros['nome'])
+    if filtros['tipo']:
+        ocorrencias = ocorrencias.filter(tipo_id=filtros['tipo'])
+    data = parse_date(filtros['data']) if filtros['data'] else None
+    if data:
+        ocorrencias = ocorrencias.filter(data_ocorrencia=data)
+
+    pagina = Paginator(ocorrencias, 25).get_page(request.GET.get('page'))
+    query = request.GET.copy()
+    query.pop('page', None)
 
     contexto = {
-        'busca': busca,
-        'usos': usos,
+        'filtros': filtros,
+        'pagina': pagina,
+        'querystring': query.urlencode(),
+        'tipos': TipoOcorrencia.objects.order_by('nome'),
+    }
+    return render(request, 'ocorrencias_administrativas.html', contexto)
+
+
+@usuario_administrativo_required
+def listar_utilizacoes_pontos(request):
+    filtros = {
+        'matricula': request.GET.get('matricula', '').strip(),
+        'nome': request.GET.get('nome', '').strip(),
+        'data': request.GET.get('data', '').strip(),
+    }
+    usos = UsoPontuacao.objects.select_related('usuario').order_by('-data_uso', '-criado_em')
+    if filtros['matricula']:
+        usos = usos.filter(usuario__username__icontains=filtros['matricula'])
+    if filtros['nome']:
+        usos = usos.filter(usuario__first_name__icontains=filtros['nome'])
+    data = parse_date(filtros['data']) if filtros['data'] else None
+    if data:
+        usos = usos.filter(data_uso=data)
+
+    pagina = Paginator(usos, 25).get_page(request.GET.get('page'))
+    query = request.GET.copy()
+    query.pop('page', None)
+
+    contexto = {
+        'filtros': filtros,
+        'pagina': pagina,
+        'querystring': query.urlencode(),
     }
     return render(request, 'utilizacoes_pontos_administrativas.html', contexto)

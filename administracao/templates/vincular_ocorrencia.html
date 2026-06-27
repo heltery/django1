@@ -356,36 +356,6 @@
 
         <button type="submit">Vincular ocorrencia</button>
     </form>
-
-    <div class="admin-list">
-        <h2>Ultimas ocorrencias</h2>
-        {% if ocorrencias %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Matricula</th>
-                        <th>Nome de guerra</th>
-                        <th>Tipo</th>
-                        <th>Pontos</th>
-                        <th>Data</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ocorrencia in ocorrencias %}
-                        <tr>
-                            <td>{{ ocorrencia.usuario.username }}</td>
-                            <td>{{ ocorrencia.usuario.first_name|default:"-" }}</td>
-                            <td>{{ ocorrencia.tipo.nome }}</td>
-                            <td>+{{ ocorrencia.pontuacao_aplicada }}</td>
-                            <td>{{ ocorrencia.data_ocorrencia|date:"d/m/Y" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p class="empty-state">Nenhuma ocorrencia vinculada.</p>
-        {% endif %}
-    </div>
 </section>
 
 {{ tipos_pontuacao|json_script:"tipos-pontuacao" }}

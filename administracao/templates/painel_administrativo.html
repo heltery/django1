@@ -61,6 +61,52 @@
         gap: 16px;
     }
 
+    .admin-sections {
+        display: grid;
+        gap: 18px;
+        margin-top: 24px;
+    }
+
+    .admin-module-section {
+        display: grid;
+        gap: 18px;
+    }
+
+    .admin-records-section {
+        display: grid;
+        gap: 14px;
+        grid-column: 1 / -1;
+        border-top: 1px solid #d9e2ec;
+        padding-top: 16px;
+    }
+
+    .admin-records-section h3 {
+        margin: 0;
+        font-size: 17px;
+    }
+
+    .admin-module-panel {
+        border-top: 1px solid #d9e2ec;
+        padding-top: 16px;
+    }
+
+    .admin-module-panel h3 {
+        margin: 0 0 8px;
+        font-size: 17px;
+    }
+
+    .admin-module-panel p {
+        margin: 0 0 14px;
+        color: #52606d;
+    }
+
+    .admin-module-actions {
+        display: grid;
+        gap: 12px;
+        border-top: 1px solid #d9e2ec;
+        padding-top: 14px;
+    }
+
     .admin-action-buttons {
         display: grid;
         gap: 12px;
@@ -181,17 +227,13 @@
     }
 
     @media (min-width: 980px) {
-        .admin-card-wide {
-            grid-column: span 2;
-        }
-
-        .admin-card-wide .admin-actions,
-        .admin-card-wide .admin-action-buttons {
+        .admin-module-section {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .admin-card-wide .admin-action-buttons {
-            grid-column: 1 / -1;
+        .admin-module-section .admin-module-panel {
+            border-top: 0;
+            padding-top: 0;
         }
     }
 </style>
@@ -202,40 +244,12 @@
         <p>Gerencie acessos, cadastros e movimentacoes do banco de horas.</p>
     </div>
 
-    <div class="app-grid">
-        <details class="admin-card" {% if forms.grupo.errors %}open{% endif %}>
-            <summary class="admin-card-header">
-                <div>
-                    <h2>Grupos</h2>
-                    <p>Crie perfis de acesso e acompanhe os grupos cadastrados.</p>
-                </div>
-                <span></span>
-            </summary>
-
-            <div class="admin-actions">
-                <div class="admin-action-buttons">
-                    <details class="admin-action-card" {% if forms.grupo.errors %}open{% endif %}>
-                        <summary class="admin-action-button">CRIAR GRUPO</summary>
-                        <div class="admin-action">
-                            <form class="admin-form" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="form_type" value="grupo">
-                                {{ forms.grupo.as_p }}
-                                <button type="submit">Salvar grupo</button>
-                            </form>
-                        </div>
-                    </details>
-
-                    <a class="admin-action-button" href="{% url 'listar_grupos' %}">MOSTRAR GRUPOS</a>
-                </div>
-            </div>
-        </details>
-
+    <div class="admin-sections">
         <details class="admin-card" {% if forms.usuario.errors %}open{% endif %}>
             <summary class="admin-card-header">
                 <div>
                     <h2>Usuarios</h2>
-                    <p>Cadastre militares no sistema e confira seus acessos.</p>
+                    <p>Cadastre militares no sistema, confira e edite seus dados de acesso.</p>
                 </div>
                 <span></span>
             </summary>
@@ -259,49 +273,81 @@
             </div>
         </details>
 
-        <details class="admin-card admin-card-wide" {% if forms.tipo.errors or forms.ocorrencia.errors %}open{% endif %}>
+        <details class="admin-card" {% if forms.grupo.errors %}open{% endif %}>
             <summary class="admin-card-header">
                 <div>
-                    <h2>Ocorrencias</h2>
-                    <p>Cadastre tipos de ocorrencia e vincule pontuacoes aos militares.</p>
+                    <h2>Grupos</h2>
+                    <p>Crie grupos e administre o que cada grupo vai poder ver e fazer no sistema.</p>
                 </div>
                 <span></span>
             </summary>
 
             <div class="admin-actions">
                 <div class="admin-action-buttons">
-                    <details class="admin-action-card" {% if forms.tipo.errors %}open{% endif %}>
-                        <summary class="admin-action-button">CADASTRAR TIPO DE OCORRENCIA</summary>
+                    <details class="admin-action-card" {% if forms.grupo.errors %}open{% endif %}>
+                        <summary class="admin-action-button">CRIAR GRUPO</summary>
                         <div class="admin-action">
                             <form class="admin-form" method="post">
                                 {% csrf_token %}
-                                <input type="hidden" name="form_type" value="tipo">
-                                {{ forms.tipo.as_p }}
-                                <button type="submit">Criar tipo</button>
+                                <input type="hidden" name="form_type" value="grupo">
+                                {{ forms.grupo.as_p }}
+                                <button type="submit">Salvar grupo</button>
                             </form>
                         </div>
                     </details>
 
-                    <a class="admin-action-button" href="{% url 'listar_tipos_ocorrencia' %}">MOSTRAR TIPOS DE OCORRENCIA</a>
-
-                    <a class="admin-action-button" href="{% url 'vincular_ocorrencia' %}">VINCULAR OCORRENCIA A MILITARES</a>
+                    <a class="admin-action-button" href="{% url 'listar_grupos' %}">MOSTRAR GRUPOS</a>
                 </div>
             </div>
         </details>
 
-        <details class="admin-card">
+        <details class="admin-card" {% if forms.tipo.errors %}open{% endif %}>
             <summary class="admin-card-header">
                 <div>
-                    <h2>Utilizacao de pontos</h2>
-                    <p>Registre abatimentos e acompanhe os ultimos usos.</p>
+                    <h2>Sistema de banco de horas</h2>
+                    <p>Gerencie ocorrencias, pontuacoes e utilizacoes de pontos.</p>
                 </div>
                 <span></span>
             </summary>
 
-            <div class="admin-actions">
-                <div class="admin-action-buttons">
-                    <a class="admin-action-button" href="{% url 'registrar_utilizacao_pontos' %}">REGISTRAR UTILIZACAO</a>
-                    <a class="admin-action-button" href="{% url 'listar_utilizacoes_pontos' %}">MOSTRAR UTILIZACOES</a>
+            <div class="admin-module-section">
+                <div class="admin-module-panel">
+                    <h3>Ocorrencias</h3>
+                    <p>Cadastre novos tipos de ocorrencia e vincule pontuacoes aos militares.</p>
+
+                    <div class="admin-module-actions">
+                        <details class="admin-action-card" {% if forms.tipo.errors %}open{% endif %}>
+                            <summary class="admin-action-button">CADASTRAR TIPO DE OCORRENCIA</summary>
+                            <div class="admin-action">
+                                <form class="admin-form" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="form_type" value="tipo">
+                                    {{ forms.tipo.as_p }}
+                                    <button type="submit">Criar tipo</button>
+                                </form>
+                            </div>
+                        </details>
+
+                        <a class="admin-action-button" href="{% url 'listar_tipos_ocorrencia' %}">MOSTRAR TIPOS DE OCORRENCIA</a>
+                    </div>
+                </div>
+
+                <div class="admin-module-panel">
+                    <h3>Utilizacao de pontos</h3>
+                    <p>Registre abatimentos e acompanhe os ultimos usos.<br><br></p>
+
+                    <div class="admin-module-actions">
+                        <a class="admin-action-button" href="{% url 'vincular_ocorrencia' %}">VINCULAR OCORRENCIA A MILITARES</a>
+                        <a class="admin-action-button" href="{% url 'registrar_utilizacao_pontos' %}">REGISTRAR UTILIZACAO</a>
+                    </div>
+                </div>
+
+                <div id="registros-banco-horas" class="admin-records-section">
+                    <h3>Registros</h3>
+                    <div class="admin-action-buttons">
+                        <a class="admin-action-button" href="{% url 'listar_ocorrencias_vinculadas' %}">REGISTRO DE ULTIMAS OCORRENCIAS</a>
+                        <a class="admin-action-button" href="{% url 'listar_utilizacoes_pontos' %}">REGISTRO DE UTILIZACAO DE PONTOS</a>
+                    </div>
                 </div>
             </div>
         </details>

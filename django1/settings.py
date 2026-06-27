@@ -195,6 +195,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 if HAS_WHITENOISE:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-LOGIN_URL = 'login'
+LOGIN_URL = 'index'
 LOGIN_REDIRECT_URL = 'inicio_sistema'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'index'

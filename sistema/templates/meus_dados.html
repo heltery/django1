@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Meus dados{% endblock %}
+
+{% block content %}
+<style>
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 22px;
+    }
+
+    .profile-readonly-field {
+        display: grid;
+        gap: 6px;
+    }
+
+    .profile-readonly-field span {
+        color: #fff7ad;
+        font-weight: 800;
+    }
+
+    .profile-readonly-field output {
+        display: block;
+        min-height: 44px;
+        padding: 11px 12px;
+        border: 1px solid rgba(214, 201, 140, .22);
+        border-radius: 10px;
+        background: rgba(120, 120, 120, .16);
+        color: rgba(255, 251, 230, .68);
+        font-weight: 700;
+    }
+
+    .profile-form {
+        margin-top: 26px;
+    }
+
+    .profile-form h2 {
+        margin-top: 0;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
+    .profile-actions button,
+    .profile-actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        margin-top: 0;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+
+    .profile-save-button {
+        padding-left: 32px !important;
+        padding-right: 32px !important;
+    }
+
+    .profile-back-link {
+        background: linear-gradient(135deg, #ff0101) !important;
+        color: #050505 !important;
+    }
+
+    @media (max-width: 720px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<section class="card">
+    <p class="text-sm font-bold uppercase tracking-[.18em] text-blue-200">Cadastro</p>
+    <h1>Meus dados</h1>
+    <p>Confira seus dados funcionais e atualize seus contatos ou senha.</p>
+
+    <div class="profile-grid">
+        <label class="profile-readonly-field">
+            <span>Matricula</span>
+            <output>{{ user.username|default:"-" }}</output>
+        </label>
+
+        <label class="profile-readonly-field">
+            <span>Posto/Graduacao</span>
+            <output>{{ perfil.posto_graduacao|default:"-" }}</output>
+        </label>
+
+        <label class="profile-readonly-field">
+            <span>Nome de guerra</span>
+            <output>{{ user.first_name|default:"-" }}</output>
+        </label>
+
+        <label class="profile-readonly-field">
+            <span>Grupo</span>
+            <output>
+                {% for grupo in grupos %}
+                    {{ grupo.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    -
+                {% endfor %}
+            </output>
+        </label>
+    </div>
+
+    <form class="profile-form" method="post">
+        {% csrf_token %}
+        <h2>Dados editaveis</h2>
+
+        {{ form.non_field_errors }}
+
+        <p>
+            {{ form.whatsapp.label_tag }}
+            {{ form.whatsapp }}
+            {{ form.whatsapp.errors }}
+        </p>
+
+        <p>
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {{ form.email.errors }}
+        </p>
+
+        <h2>Alterar senha</h2>
+
+        <p>
+            {{ form.senha_atual.label_tag }}
+            {{ form.senha_atual }}
+            {{ form.senha_atual.help_text }}
+            {{ form.senha_atual.errors }}
+        </p>
+
+        <p>
+            {{ form.nova_senha.label_tag }}
+            {{ form.nova_senha }}
+            {{ form.nova_senha.errors }}
+        </p>
+
+        <p>
+            {{ form.confirmar_senha.label_tag }}
+            {{ form.confirmar_senha }}
+            {{ form.confirmar_senha.errors }}
+        </p>
+
+        <div class="profile-actions">
+            <button class="profile-save-button" type="submit"><strong>Salvar alteracoes</strong></button>
+            <a class="admin-back-link profile-back-link" href="{% url 'inicio_sistema' %}">Voltar</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -27,6 +27,7 @@
     <style>
         :root {
             color-scheme: dark;
+            --footer-height: 78px;
             --bg: #090909;
             --panel: #171717;
             --panel-soft: #24210f;
@@ -48,6 +49,7 @@
         body {
             margin: 0;
             min-height: 100vh;
+            padding-bottom: var(--footer-height);
             background:
                 radial-gradient(circle at 20% 0%, rgba(255, 242, 0, .10), transparent 28%),
                 radial-gradient(circle at 80% 0%, rgba(230, 0, 0, .12), transparent 30%),
@@ -123,6 +125,15 @@
             border: 1px solid var(--line-soft);
             border-radius: 14px;
             background: rgba(23, 23, 23, .82);
+            color: inherit;
+            text-decoration: none;
+            transition: border-color .2s ease, transform .2s ease, filter .2s ease;
+        }
+
+        .user-chip:hover {
+            border-color: rgba(255, 242, 0, .46);
+            filter: brightness(1.08);
+            transform: translateY(-1px);
         }
 
         .user-chip strong {
@@ -146,14 +157,14 @@
         .app-shell {
             display: grid;
             grid-template-columns: 230px minmax(0, 1fr);
-            min-height: calc(100vh - 78px);
+            min-height: calc(100vh - 78px - var(--footer-height));
         }
 
         .sidebar {
             position: sticky;
             top: 78px;
             align-self: start;
-            min-height: calc(100vh - 78px);
+            min-height: calc(100vh - 78px - var(--footer-height));
             background: rgba(5, 5, 5, .88);
             color: var(--text);
             border-right: 1px solid var(--line-soft);
@@ -219,6 +230,70 @@
             max-width: 1180px;
             width: 100%;
             box-sizing: border-box;
+        }
+
+        .site-footer {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 30;
+            display: grid;
+            grid-template-columns: 160px minmax(0, 1fr) 160px;
+            align-items: center;
+            min-height: var(--footer-height);
+            padding: 10px 24px;
+            border-top: 1px solid var(--line-soft);
+            background: rgba(5, 5, 5, .96);
+            box-shadow: 0 -14px 34px rgba(0, 0, 0, .28);
+            backdrop-filter: blur(14px);
+        }
+
+        .footer-contact {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .footer-contact a {
+            display: inline-grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--line-soft);
+            border-radius: 999px;
+            background: rgba(255, 242, 0, .08);
+            color: var(--accent);
+            font-size: 15px;
+            font-weight: 950;
+            text-decoration: none;
+            transition: border-color .2s ease, transform .2s ease, filter .2s ease;
+        }
+
+        .footer-contact svg {
+            width: 19px;
+            height: 19px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .footer-contact a:hover {
+            border-color: rgba(255, 242, 0, .46);
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+
+        .footer-text {
+            display: grid;
+            gap: 2px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.25;
         }
 
         a {
@@ -485,6 +560,10 @@
         }
 
         @media (max-width: 760px) {
+            :root {
+                --footer-height: 118px;
+            }
+
             header {
                 flex-wrap: wrap;
                 padding: 14px 16px;
@@ -527,6 +606,17 @@
             main {
                 padding: 20px 14px 32px;
             }
+
+            .site-footer {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                gap: 8px;
+                padding: 10px 14px;
+            }
+
+            .footer-contact {
+                order: 2;
+            }
         }
     </style>
 </head>
@@ -538,16 +628,18 @@
         <div class="brand-title">SISTEMA BPRONE</div>
         <nav class="header-actions">
             {% if user.is_authenticated %}
-                <div class="user-chip">
+                <a class="user-chip" href="{% url 'meus_dados' %}" title="Meus dados">
                     <strong>{{ user.username }}</strong>
-                    <span>{{ user.first_name|default:"Nome de guerra nao informado" }}</span>
-                </div>
+                    {% with posto=user.perfil_administrativo.posto_graduacao nome=user.first_name|default:"Nome de guerra nao informado" %}
+                        <span>{% if posto %}{{ posto }} {% endif %}{{ nome }}</span>
+                    {% endwith %}
+                </a>
                 <form action="{% url 'logout' %}" method="post" style="display:inline">
                     {% csrf_token %}
                     <button type="submit">Sair</button>
                 </form>
             {% else %}
-                <a href="{% url 'login' %}">Entrar</a>
+                <a href="{% url 'index' %}">Entrar</a>
             {% endif %}
         </nav>
     </header>
@@ -573,5 +665,27 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    <footer class="site-footer">
+        <div class="footer-contact" aria-label="Contatos do NTI">
+            <a href="https://wa.me/+5583993275757" target="_blank" rel="noopener noreferrer" title="WhatsApp NTI" aria-label="WhatsApp NTI">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.4-5a8.5 8.5 0 1 1 16.6-3.5Z"></path>
+                    <path d="M9.2 8.8c.3 2.5 2.3 4.5 4.8 4.9l1.2-1.2 2 .6c.2.1.3.3.3.5-.2 1-1 1.7-2 1.7-4.1 0-7.4-3.3-7.4-7.4 0-1 .7-1.8 1.7-2 .2 0 .4.1.5.3l.6 2-1.2 1.2Z"></path>
+                </svg>
+            </a>
+            <a href="mailto:nti.bprone@gmail.com" title="E-mail NTI" aria-label="E-mail NTI">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 6h16v12H4z"></path>
+                    <path d="m4 7 8 6 8-6"></path>
+                </svg>
+            </a>
+        </div>
+        <div class="footer-text">
+            <span>Polícia Militar da Paraíba</span>
+            <span>Batalhão de Rondas Ostensivas de Natureza Especializada - BPRONE</span>
+            <span>Núcleo de Tecnologia e Informática - NTI</span>
+        </div>
+        <div></div>
+    </footer>
 </body>
 </html>

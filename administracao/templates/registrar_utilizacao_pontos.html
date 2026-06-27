@@ -336,36 +336,6 @@
 
         <button type="submit">Registrar uso</button>
     </form>
-
-    <div class="admin-list">
-        <h2>Ultimas utilizacoes</h2>
-        {% if usos %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Matricula</th>
-                        <th>Nome de guerra</th>
-                        <th>Descricao</th>
-                        <th>Pontos</th>
-                        <th>Data</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for uso in usos %}
-                        <tr>
-                            <td>{{ uso.usuario.username }}</td>
-                            <td>{{ uso.usuario.first_name|default:"-" }}</td>
-                            <td>{{ uso.descricao }}</td>
-                            <td>-{{ uso.pontos }}</td>
-                            <td>{{ uso.data_uso|date:"d/m/Y" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p class="empty-state">Nenhuma utilizacao registrada.</p>
-        {% endif %}
-    </div>
 </section>
 <script>
     (function () {

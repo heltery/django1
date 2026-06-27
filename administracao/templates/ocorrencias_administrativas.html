@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Utilizacoes de pontos{% endblock %}
+{% block title %}Ocorrencias{% endblock %}
 
 {% block content %}
 <style>
@@ -33,7 +33,8 @@
         font-size: 13px;
     }
 
-    .admin-filter-form input {
+    .admin-filter-form input,
+    .admin-filter-form select {
         margin-top: 6px;
     }
 
@@ -69,8 +70,8 @@
 <section class="card">
     <div class="admin-page-header">
         <div>
-            <h1>Utilizacoes de pontos</h1>
-            <p>Consulte utilizacoes registradas e filtre por militar ou data.</p>
+            <h1>Registro de ocorrencias</h1>
+            <p>Consulte ocorrencias vinculadas e filtre por militar, tipo ou data.</p>
         </div>
         <a class="admin-back-link" href="{% url 'painel_administrativo' %}">Voltar</a>
     </div>
@@ -87,13 +88,23 @@
         </label>
 
         <label>
+            Tipo de ocorrencia
+            <select name="tipo">
+                <option value="">Todos</option>
+                {% for tipo in tipos %}
+                    <option value="{{ tipo.id }}" {% if filtros.tipo == tipo.id|stringformat:"s" %}selected{% endif %}>{{ tipo.nome }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
             Data
             <input type="date" name="data" value="{{ filtros.data }}">
         </label>
 
         <div class="admin-filter-actions">
             <button type="submit">Filtrar</button>
-            <a class="admin-action-button" href="{% url 'listar_utilizacoes_pontos' %}">Limpar</a>
+            <a class="admin-action-button" href="{% url 'listar_ocorrencias_vinculadas' %}">Limpar</a>
         </div>
     </form>
 
@@ -104,25 +115,25 @@
                     <tr>
                         <th>Matricula</th>
                         <th>Nome de guerra</th>
-                        <th>Descricao</th>
+                        <th>Tipo</th>
                         <th>Pontos</th>
                         <th>Data</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for uso in pagina %}
+                    {% for ocorrencia in pagina %}
                         <tr>
-                            <td>{{ uso.usuario.username }}</td>
-                            <td>{{ uso.usuario.first_name|default:"-" }}</td>
-                            <td>{{ uso.descricao }}</td>
-                            <td>-{{ uso.pontos }}</td>
-                            <td>{{ uso.data_uso|date:"d/m/Y" }}</td>
+                            <td>{{ ocorrencia.usuario.username }}</td>
+                            <td>{{ ocorrencia.usuario.first_name|default:"-" }}</td>
+                            <td>{{ ocorrencia.tipo.nome }}</td>
+                            <td>+{{ ocorrencia.pontuacao_aplicada }}</td>
+                            <td>{{ ocorrencia.data_ocorrencia|date:"d/m/Y" }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
 
-            <nav class="admin-pagination" aria-label="Paginacao de utilizacoes">
+            <nav class="admin-pagination" aria-label="Paginacao de ocorrencias">
                 <span>Pagina {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
                 <div class="admin-pagination-actions">
                     {% if pagina.has_previous %}
@@ -134,7 +145,7 @@
                 </div>
             </nav>
         {% else %}
-            <p class="empty-state">Nenhuma utilizacao encontrada.</p>
+            <p class="empty-state">Nenhuma ocorrencia encontrada.</p>
         {% endif %}
     </div>
 </section>
